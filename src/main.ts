@@ -1,3 +1,5 @@
+import * as IP from 'ip';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import {
@@ -6,52 +8,43 @@ import {
 } from '@nestjs/platform-fastify';
 
 import helmet from '@fastify/helmet';
+import fastifyCookie from '@fastify/cookie';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyCsrf from '@fastify/csrf-protection';
 import secureSession from '@fastify/secure-session';
 
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
-import { AppModule } from './app.module';
+import { ApplicationModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
+    ApplicationModule,
     new FastifyAdapter({
-      logger: true,
+      logger: false,
     }),
     {
       rawBody: true,
-      bodyParser: true,
+      bodyParser: false,
+      logger: ['error', 'warn'],
     },
   );
 
-  /**
-   * 允许通过 multipart/form-data 传输数据
-   */
-  await app.register(fastifyMultipart, { attachFieldsToBody: 'keyValues' });
   await app.register(fastifyCsrf);
-  await app.register(secureSession, {
-    secret: 'averylogphrasebiggerthanthirtytwochars',
-    salt: 'mq9hDxBVDbspDR6n',
+  // 允许通过 multipart/form-data 传输数据
+  await app.register(fastifyMultipart, { attachFieldsToBody: 'keyValues' });
+  await app.register(fastifyCookie, {
+    secret: process.env.COOKIE_SECRET, // for cookies signature
   });
-  // CSP策略
-  await app.register(helmet, {
-    // global: true,
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: [`'self'`],
-        styleSrc: [`'self'`, `'unsafe-inline'`],
-        imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
-        scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
-      },
-    },
+  await app.register(secureSession, {
+    secret: process.env.SESSION_SECRET,
+    salt: process.env.SESSION_SALT,
   });
 
   app.setGlobalPrefix('/api');
 
-  // 所有路由 对dto 入参进行验证 https://docs.nestjs.com/techniques/validation
   app.useGlobalPipes(
+    // 所有路由 对dto 入参进行验证 https://docs.nestjs.com/techniques/validation
     new ValidationPipe({
       whitelist: true,
       transform: true,
@@ -67,6 +60,20 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(3000, '0.0.0.0');
+  // CSP策略
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: [`'self'`],
+        styleSrc: [`'self'`, `https: 'unsafe-inline'`],
+        imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
+        scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+      },
+    },
+  });
+
+  await app.listen(3000, IP.address('public'));
+  console.log(`Application running on url: ${await app.getUrl()}`);
 }
 bootstrap();

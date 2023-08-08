@@ -18,7 +18,7 @@ import { AuthModule } from './modules/auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: [`../.env.${process.env.NODE_ENV}`],
+      envFilePath: [`../.env.${process.env.NODE_ENV}`, '.env.local'],
       isGlobal: true,
     }),
     // 限制同一 IP 地址请求速率
@@ -47,4 +47,4 @@ import { AuthModule } from './modules/auth/auth.module';
     },
   ],
 })
-export class AppModule {}
+export class ApplicationModule {}

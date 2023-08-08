@@ -4,6 +4,8 @@ import {
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
+import * as dayjs from 'dayjs';
+
 import type { FastifyReply } from 'fastify';
 
 @Catch()
@@ -17,9 +19,9 @@ export class HttpResponseFilter implements ExceptionFilter {
     // 优先获取通过  new HttpException() 抛出的错误信息
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const response = exception.getResponse();
-      if (response) {
-        const messageList = response['message'];
+      const exceptionResponse = exception.getResponse();
+      if (exceptionResponse) {
+        const messageList = exceptionResponse['message'];
         message =
           Array.isArray(messageList) && messageList.length > 0
             ? messageList[0]
@@ -35,6 +37,7 @@ export class HttpResponseFilter implements ExceptionFilter {
     response.status(status).send({
       code: 0,
       msg: message,
+      timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'),
     });
   }
 }

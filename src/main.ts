@@ -1,7 +1,7 @@
 import * as IP from 'ip';
 
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, HttpStatus } from '@nestjs/common';
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -48,6 +48,7 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      errorHttpStatusCode: HttpStatus.BAD_REQUEST,
     }),
   );
 

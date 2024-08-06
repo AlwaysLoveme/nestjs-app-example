@@ -43,7 +43,11 @@ export class RegisterAuthDto implements Omit<User, 'id'> {
   })
   name: string;
 
-  @MinLength(8)
-  @MaxLength(12)
+  @MinLength(8, {
+    message: '密码不少于 8 位',
+  })
+  @MaxLength(12, {
+    message: '密码不超过 12 位',
+  })
   password: string;
 }

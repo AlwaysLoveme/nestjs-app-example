@@ -23,8 +23,12 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     // 限制同一 IP 地址请求速率
     ThrottlerModule.forRoot({
-      ttl: 60,
-      limit: 5,
+      throttlers: [
+        {
+          ttl: 60,
+          limit: 5,
+        },
+      ],
     }),
     PrismaModule,
     UserModule,

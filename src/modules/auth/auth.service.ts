@@ -1,9 +1,9 @@
-import { HttpException, NotFoundException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@/prisma/prisma.service';
 
-import { compare, hash, genSaltSync } from 'bcrypt';
+import { compare, genSaltSync, hash } from 'bcrypt';
 import { LoginAuthDto, RegisterAuthDto } from './dto/login.dto';
 
 @Injectable()
@@ -26,13 +26,9 @@ export class AuthService {
       throw new HttpException(`${loginAuthDto.email} 用户密码错误`, 200);
     }
 
-    const accessToken = await this.jwtService.signAsync({
+    return await this.jwtService.signAsync({
       uid: user.id,
     });
-
-    return {
-      accessToken,
-    };
   }
 
   async register(registerDto: RegisterAuthDto) {
@@ -44,18 +40,13 @@ export class AuthService {
     if (exitUser) throw new HttpException(`${registerDto.email}已被注册`, 200);
 
     const salt = genSaltSync();
-    const hashPwd = await hash(registerDto.password, salt);
-    registerDto.password = hashPwd;
+    registerDto.password = await hash(registerDto.password, salt);
 
     const user = await this.prisma.user.create({
       data: registerDto,
     });
-    const accessToken = await this.jwtService.signAsync({
+    return await this.jwtService.signAsync({
       uid: user.id,
     });
-
-    return {
-      accessToken,
-    };
   }
 }

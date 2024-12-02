@@ -4,7 +4,6 @@ import * as Log4js from 'log4js';
 import * as stackTrace from 'stacktrace-js';
 
 import * as dayjs from 'dayjs'; // 处理时间的工具
-import * as Chalk from 'chalk';
 import config from './log.config';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
@@ -32,7 +31,10 @@ export class ContextTrace {
   ) {}
 }
 
-Log4js.addLayout('Awesome-nest', (logConfig) => {
+(function () {})();
+// @ts-ignore
+Log4js.addLayout('Awesome-nest', async (logConfig) => {
+  const { default: chalk } = await import('chalk');
   return (logEvent: Log4js.LoggingEvent): string => {
     let moduleName = '';
     let position = '';
@@ -71,26 +73,26 @@ Log4js.addLayout('Awesome-nest', (logConfig) => {
     // 根据日志级别，用不同颜色区分
     switch (logEvent.level.toString()) {
       case LoggerLevel.DEBUG:
-        levelOutput = Chalk.green(levelOutput);
+        levelOutput = chalk.green(levelOutput);
         break;
       case LoggerLevel.INFO:
-        levelOutput = Chalk.cyan(levelOutput);
+        levelOutput = chalk.cyan(levelOutput);
         break;
       case LoggerLevel.WARN:
-        levelOutput = Chalk.yellow(levelOutput);
+        levelOutput = chalk.yellow(levelOutput);
         break;
       case LoggerLevel.ERROR:
-        levelOutput = Chalk.red(levelOutput);
+        levelOutput = chalk.red(levelOutput);
         break;
       case LoggerLevel.FATAL:
-        levelOutput = Chalk.hex('#DD4C35')(levelOutput);
+        levelOutput = chalk.hex('#DD4C35')(levelOutput);
         break;
       default:
-        levelOutput = Chalk.grey(levelOutput);
+        levelOutput = chalk.grey(levelOutput);
         break;
     }
 
-    return `${Chalk.green(typeOutput)}${dateOutput}  ${Chalk.yellow(
+    return `${chalk.green(typeOutput)}${dateOutput}  ${chalk.yellow(
       moduleOutput,
     )}${levelOutput}${positionOutput}`;
   };
